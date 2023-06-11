@@ -11,5 +11,20 @@ services:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_HOST=localhost
-      - POSTGRES_PORT=5432
+  app:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+    - ./recordings:/app/recordings
+    - ./db/migrations/versions:/app/db/migrations/versions
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    command: bash -c "chmod +x /app/wait-for-it.sh && /app/wait-for-it.sh -t 0 db:5432 -- alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"
